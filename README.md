@@ -1,4 +1,4 @@
-# Teaching Bayes to Diverse Audiences
+# Modules for Teaching Bayes to Diverse Audiences
 Motivation:
 Although most analysts were taught from the frequentist statistical perspective, many new and exciting statistical methods are being developed from a Bayesian perspective. It is important for analysts of diverse educational background to be familiar with ideas from the Bayesian perspective so they can interpret results from Bayesian analyses and perhaps even apply these analyses themselves. 
 
