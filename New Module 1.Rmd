@@ -1,0 +1,142 @@
+---
+title: 'Module 1: Review of frequentist estimation of a population mean ($\mu$) and
+  standard deviation ($\sigma$)'
+output: word_document
+---
+
+## Disclaimer
+Module 1 is a review of frequentist statistical methods. If the material covered in Module 1 is new for you, we recommend consulting a statistics textbook, such as Peck & Devore (2011), Witte & Witte (2017), or McClave & Sincih (2017), before continuing on to Modules 2, 3 and 4. 
+
+## The Example
+Imagine a nursing home has hired you to conduct some statistical analyses for them. One of the things the nursing home would like to know is the mean and standard deviation of cognitive ability for their patients. 
+
+## The Data
+To measure the patients' cognitive ability, you decide to administer the Mini-Mental State Examination (MMSE; Folstein, Folstein, & McHugh, 1975) to only a sample of the nursing home's patients (due to logistic constraints). The MMSE is an examination developed to measure cognitive ability and is often used as a diagnostic test for dementia (Siu, 1991). The MMSE awards points for correct question responses up to a maximum score of 30. That is, scores range from 0-30, with higher scores indicating higher cognitive ability. 
+
+Because this is a hypothetical example, we will simulate the MMSE scores. Our simulation will produce MMSE-like scores for a sample of 30 nursing home patients who are, on average, cognitively impaired. (According to Kochhan (2010), MMSE scores below 23 may indicate cognitive impairment.) Scores are simulated from a normal distribution with $\mu = 22$ and $\sigma = 0.2$. To simulate the MMSE scores, open a new R script in RStudio, copy and paste the following code, and run it. 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+set.seed(1) # Setting the seed ensures that your random numbers match my random numbers 
+            # As long as our seed values match, the chosen seed value is arbitrary
+MMSE <- rnorm(n = 30, mean = 22, sd = 0.2) # Simulate 30 observations from a normal distribution with a mean of 22 and standard deviation of 0.2
+simdata <- as.data.frame(MMSE)
+```
+
+## Visualizing the Simulated Scores
+Copy and paste the following code into your R script and run it to produce a histogram of the simulated scores.
+```{r, results = "hide", warning = FALSE, message = FALSE}
+hist(simdata$MMSE, main = "Histogram", breaks = 10, prob = T, xlab = "Simulated MMSE Scores") 
+```
+
+## Testing the Assumption of Normality
+In the following analysis, we will fit a statistical model that assumes the outcome variable is normally distributed in the population. Although the histograms above suggest that the data could have been sampled from a normal population distribution, let's use the Shapiro-Wilk test of normality to evaluate this. Copy and paste the following code into your R script and run it.
+```{r, results = "hide", warning = FALSE, message = FALSE}
+shapiro.test(simdata$MMSE) # Shapiro-Wilk test of normality
+```
+The results of the Shapiro-Wilk test are insignificant (p > .05), so we fail to reject the null hypothesis. In other words, there is not enough evidence to suggest that the simulated MMSE scores are non-normally distributed. 
+
+## The Analysis
+To __estimate $\mu$ and $\sigma$__ using the simulated MMSE scores, we fit a linear model to the scores using the lm() function. The linear model specified below will produce estimates of the population mean $\mu$, the standard error of the estimate of $\mu$, and the residual standard error $\sigma$. The residual standard error represents the spread of the simulated MMSE scores about their mean. To obtain estimates of $\mu$, the standard error of the estimate of $\mu$, and $\sigma$, copy and paste the following code into your R script and run it.
+```{r, results = "hide", warning = FALSE, message = FALSE}
+mod1 <- lm(MMSE ~ 1, data = simdata) # Fit a linear model 
+summary(mod1) # Examine the model output
+summary(mod1)$coefficient[1] # This is an estimate of the population mean of MMSE scores
+summary(mod1)$coefficient[2] # This is the standard error of the estimate of the mean of MMSE scores
+summary(mod1)$sigma # This is an estimate of the population standard deviation of MMSE scores
+```
+
+## Interpreting the Model Results
+The line of code 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+summary(mod1)$coefficient[1]
+``` 
+outputs the sample mean $\bar{x}$, a point estimate of $\mu$ (the population mean of $x$, where $x$ represents the simulated MMSE scores). $\bar{x}$ represents the central tendency of $x$. The line of code
+```{r, results = "hide", warning = FALSE, message = FALSE}
+summary(mod1)$sigma
+``` 
+outputs the sample standard deviation $s$, a point estimate of $\sigma$ (the population standard deviation of $x$). $s$ represents the spread of $x$ about its mean. The line of code 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+summary(mod1)$coefficient[2]
+```
+outputs the standard error of $\bar{x}$. Because __it’s so important to understand the concept of the sampling distribution when interpreting the standard error__, we present a demonstration of the concept below to refresh your memory.
+
+Imagine if we were to draw many samples of size _n_ from a population, estimate $\bar{x}$ for each sample, and plot a histogram of every $\bar{x}$. This histogram would represent the sampling distribution of $\bar{x}$, and its standard deviation would represent the sampling variability of $\bar{x}$. The standard deviation of the sampling distribution gives us information about how far the typical sample mean is from the “true” value of the mean in the population.
+
+The sampling distribution is a theroetical concept. In practice, we don't draw many samples of size _n_ from the population because we only have the resources (time, money, etc.) to draw a single sample. For this reason, we don't know the standard deviation of the sampling distribution. Rather, we estimate the standard deviation of the sampling distribution of the sample mean (the standard error of the mean) by dividing the sample standard deviation (or the population standard deviation, if you know it) of the variable by the square root of _n_.
+
+The following code (1) simulates a population of scores, (2) draws many (in this case, 500) samples of size _n_ = 50 from this population, (3) calculates the mean of each sample, and (4) plots a histogram of the sample means. The histogram is a visualization of the theoretical sampling distribution. Copy and paste the following code into your R script and run it.
+```{r, results = "hide", warning = FALSE, message = FALSE}
+# (1) Simulate a population of scores
+set.seed(1)
+population <- rnorm(n = 400000, mean = 0, sd = 1) 
+
+# (2) Draw many (in this case 500) samples of size N = 50 from the population and (3) Estimate the mean of each sample
+means <- unlist(lapply(50, function(x){
+  lapply(1:500, function(y){
+    mean(sample(population,x,replace=FALSE))
+  })
+}))
+
+# (4) Plot a histogram of the means (a.k.a. the sampling distribution of the mean)
+hist(means, main = 'Sampling Distribution of the Sample Mean', xlab = "Sample Means")
+```
+
+According to Peck & Devore (2011), the first two general properties of the sampling distribution are that:
+
+1) $\mu_\bar{x}$ (the mean of the sampling distribution) $\approx\mu$ 
+
+2) $\sigma_\bar{x}$ (the standard deviation of the sampling distribution) $\approx\frac{\sigma}{\sqrt{n}}$\ 
+
+Using the demonstration of the sampling distribution in the block of code above, let's verify the first two general properties of the sampling distribution. Copy and paste the following code into your R script and run it. 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+mean(means) # Calculate the mean of the 500 sample means 
+sd(means) # Calculate the standard deviation of the 500 sample means
+1/sqrt(50) # Calculate the population standard deviation divided by the square root of the size of the 500 samples
+```
+
+The line of code 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+mean(means)
+``` 
+outputs $\mu_\bar{x}$ (the mean of the sampling distribution of $\bar{x}$). From this output, we see that $\mu_\bar{x}\approx\mu$. The line of code 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+sd(means)
+``` 
+outputs $\sigma_\bar{x}$ (the standard deviation of the sampling distribution of $\bar{x}$), and the line of code
+```{r, results = "hide", warning = FALSE, message = FALSE}
+1/sqrt(50)
+``` 
+outputs $\frac{1}{\sqrt{50}}$\. From the output of these two lines of code, we see that $\sigma_\bar{x}\approx\frac{\sigma}{\sqrt{n}}$. 
+
+## Interpreting a Confidence Interval for $\mu$
+Frequentist confidence intervals provide another measure of the uncertainty of the value of a parameter estimate (Kruschke & Liddell, 2018). The higher the specified level of confidence (typically 95% in psychology), the wider the interval (and vice versa). 
+
+The interpretation of a frequentist confidence interval relies on the concept of long-run frequencies as discussed in the previous illustration of the sampling distribution. For example, one interpretation of a 95% confidence interval is that 100 samples drawn from a population yield confidence intervals, of which 95 are expected to contain the "true" population parameter. This interpretation applies the statement of probability to the sampling distribution.
+
+An __incorrect interpretation__ of a frequentist confidence interval says that the confidence interval contains the 95% most probable values of a parameter. This interpretation applies the statement of probability to the parameter as if it has a probability distribution. In the frequentist perspective, parameters do not have statements of probability attached to them because they are not random variables with probability distributions. That is, they are conceptualized as fixed at some "true" value in the population. Therefore, the interval either contains the parameter or it does not. 
+
+In summary, statements of probability in the frequentist perspective apply to the sampling distribution, not the parameter (Gelman, Carlin, Stern, Dunson, Vehtari, & Rubin, 2013). This distinction will become clearer as we introduce concepts from the Bayesian perspective in Modules 3 and 4.
+
+The following code calculates a 95% confidence interval for $\mu$. Copy and paste the following code into your R script and run it. 
+```{r, results = "hide", warning = FALSE, message = FALSE}
+confint(mod1)
+```
+
+## Evaluating Your Understanding
+Please __return to the Qualtrics survey__ to answer a few questions designed to evaluate your understanding of the material presented in this module. If you can confidently answer these questions, you're ready to move onto the next module!
+
+## References
+Folstein, M. F., Folstein, S. E., & McHugh, P. R. (1975). “Mini-mental state”: a practical method for grading the cognitive state of patients for the clinician. Journal of psychiatric research, 12(3), 189-198.
+
+Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press. 
+
+Kochhann, R., Varela, J. S., de Macedo Lisboa, C. S., & Chaves, M. L. F. (2010). The Mini Mental State Examination: review of cutoff points adjusted for schooling in a large Southern Brazilian sample. Dementia & Neuropsychologia, 4(1), 35.
+
+Kruschke, J. K., & Liddell, T. M. (2018). The Bayesian New Statistics: Hypothesis testing, estimation, meta-analysis, and power analysis from a Bayesian perspective. Psychonomic Bulletin & Review, 25(1), 178-206.
+
+McClave, J. T., and Sincich, T. (2013). Statistics. London, England: Pearson Education. 
+
+Peck, R., & Devore, J. L. (2011). Statistics: The exploration & analysis of data. Cengage Learning.
+
+Siu, A. L. (1991). Screening for dementia and investigating its causes. Annals of Internal Medicine, 115(2), 122-132.
+
+Witte, R. S., and Witte, J. S. (2016), Statistics. Hoboken, NJ: Wiley.
