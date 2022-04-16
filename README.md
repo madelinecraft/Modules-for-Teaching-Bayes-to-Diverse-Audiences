@@ -6,3 +6,7 @@ Although most analysts were taught from the frequentist statistical perspective,
 Summary:
 
 To this end, we developed a set of four hands-on modules for building familiarity and proficiency in Bayesian skills. These modules were designed to present complex statistical ideas to audiences of diverse educational backgrounds. After thoughtful consideration of user-friendly Bayesian software, we chose the R package brms (Bürkner, 2017) for implementing the Bayesian analyses presented in these modules.
+
+Note: 
+
+The raw R Markdown files are stored above and can be knitted for optimal user experience. 
