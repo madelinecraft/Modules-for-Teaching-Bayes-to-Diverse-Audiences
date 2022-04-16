@@ -1,0 +1,129 @@
+---
+title: 'Module 1: Review of Frequentist Estimation of a Mean and Standard Deviation'
+authors: Craft, Ye, & Blozis
+---
+
+
+Module 1 is a review of frequentist estimation of a mean and standard deviation. If the material covered in Module 1 is new for you, we recommend reading an undergraduate statistics textbook (see, e.g. Peck & Devore, 2011; Witte & Witte, 2017; McClave & Sincih, 2017) before continuing on to Module 3. 
+
+
+#### Frequentist Estimation Example
+
+
+## Introduction to the Stroop Color-Word Test of Cognitive Ability
+The Stroop Color-Word Test (Stroop, 1935) was developed to measure the cognitive component of executive function (Homack & Riccio, 2004). In one of several versions of the Stroop Color-Word Test, participants receive a set of color names for which the font color is different from the color name. The participants are asked to read the color names as accurately and quickly as possible. The amount of time it takes (in seconds) to complete the set is a participant's score.
+
+
+## The Story Problem
+Imagine you've been asked by a nursing home to __estimate the mean and standard deviation__ of a sample of their patients' Stroop Color-Word Test scores. If the results of your analysis indicate cognitive impairment (mean > 40), the nursing home will hire a psychologist who specializes in cognitive intervention. If the results indicate that the average cognition for patients does not exceed 40, the nursing home will not hire this psychologist. 
+
+For this example, we will simulate values to serve as Stroop Color-Word Test scores for these patients.
+
+
+## Simulating Stroop Color-Word Test Scores
+Scores from the Stroop Color-Word Test are typically positively skewed, with few individuals taking relatively long periods of time to complete the test. Additionally, test scores are positive because performance results will never result in negative values. With this in mind, the following code simulates scores from a lognormal distribution with a mean of 40 seconds and standard deviation of 120 seconds. Open a new R script in RStudio, copy and paste the following code, and run it.
+```{r}
+set.seed(1) # Setting the seed ensures that your random numbers match my random numbers (as long as our seed values match, the chosen seed value is arbitrary)
+mean <- 40 # Specify the population mean of Stroop scores for the simulated data
+sd <- 120 # Specify the population standard deviation of Stroop scores for the simulated data
+location <- log(mean^2 / sqrt(sd^2 + mean^2)) # Transform the mean so that the simulated data end up with the correct mean
+shape <- sqrt(log(1 + (sd^2 / mean^2))) # Transform the standard deviation so that the simulated data end up with the correct standard deviation
+simdata <- rlnorm(n = 10, mean = location, sd = shape) # Simulate 10 observations from a log normal distribution
+```
+
+
+## Visualizing the Simulated Scores
+Next, let's plot a histogram of the simulated scores and overlay a corresponding probability density function (PDF). Copy and paste the following code into your R script and run it.
+```{r}
+hist(simdata, main = "Histogram and Overlayed PDF", breaks = 15, prob = T, xlab = "Simulated Stroop Color-Word Test Scores", ylim = c(0, .05)) # Create a histogram of the simulated scores
+curve(10*dlnorm(x, mean = mean(simdata), sd = sd(simdata)), lwd = 2, add = TRUE)
+```
+
+
+## Transforming the Outcome Variable
+It is easiest to use a linear model to estimate the mean and standard deviation of Stroop Color-Word Test scores. However, linear models assume normality of the outcome variable (the Stroop scores). The outcome variable is log-normally distributed, so we have a couple of options: (1) fit a model that assumes non-normality of the outcome variable or (2) transform the scores and then fit a model that assumes the transformed scores are normally distributed. Let’s try (2). Copy and paste the following code into your R script and run it.
+```{r}
+logsimdata <- log(simdata) # Take the log of the scores
+```
+
+Next, let's plot a histogram of the transformed scores and overlay a corresponding probability density function (PDF). Copy and paste the following code into your R script and run it.
+```{r}
+hist(logsimdata, main = "Histogram and Overlayed PDF", breaks = 10, prob = T, xlab = "Log Transformed Scores") # Create a histogram of the log of the scores
+curve(dnorm(x, mean = mean(logsimdata), sd = sd(logsimdata)), lwd=2, add=TRUE) # Overlay the density function
+```
+
+
+## Testing the Assumption of Normality
+The above histogram of the transformed scores looks approximately normal, but it's hard to tell for sure with only ten scores. Let's run a Shapiro-Wilk test of normality. The null hypothesis of the Shapiro-Wilk test is that the scores are normally distributed. The alternative hypothesis is that the scores are non-normally distributed. Copy and paste the following code into your R script and run it.
+```{r, results = "hide"}
+shapiro.test(logsimdata) # Shapiro-Wilk test of normality
+```
+The results of the Shapiro-Wilk test are insignificant (p > .05), so we fail to reject the null hypothesis. In other words, there is not enough evidence to suggest that the transformed scores are non-normally distributed. 
+
+
+## Estimating the Model
+Now we can proceed by fitting a linear model using the "lm" function to obtain a summary of the sample data. The lm function uses ordinary least squares (OLS) estimation. Keep in mind that the estimates are based on log transformed scores, so the interpretations are slightly different. Copy and paste the following code into your R script and run it.
+```{r, results = "hide"}
+data <- as.data.frame(logsimdata) # The lm function requires the data to be in a data frame format
+ulm <- lm(logsimdata ~ 1, data = data) # Fit the unconditional linear model (aka the linear model with no predictors)
+summary(ulm) # Examine the model output
+summary(ulm)$coefficient[1] # The estimated intercept of this linear model is an estimate of the population mean of scores (on the log scale)
+summary(ulm)$coefficient[2] # This (the standard error of the mean) is an estimate of the sampling variability of the mean (on the log scale)
+summary(ulm)$sigma # Sigma (the residual standard error) is an estimate of the population standard deviation of scores (on the log scale)
+```
+
+
+## Interpreting the Model Results
+It’s important to understand the concept of the sampling distribution when interpreting frequentist model output. Imagine if we were to draw many samples of size _n_ from a population, estimate the mean for each sample, and plot a histogram of every estimated mean. This histogram would represent the sampling distribution of the sample mean, and its standard deviation would represent the sampling variability of the sample mean. The standard deviation of the sampling distribution gives us information about how far the typical sample mean is from the “true” value of the mean in the population.
+
+The sampling distribution is a theroetical concept. In practice, we don't draw many samples of size _n_ from the population because we only have the resources (time, money, etc.) to draw a single sample. For this reason, we don't know the standard deviation of the sampling distribution. Rather, we estimate the standard deviation of the sampling distribution of the sample mean (also known as the standard error of the sample mean) by dividing the sample standard deviation of the variable by the square root of _n_.
+
+The following code (1) simulates a population of scores, (2) draws many (in this case, 300) samples of size _n_ = 30 from this population, (3) calculates the mean of each sample, and (4) plots a histogram of the sample means. The histogram is a visualization of the theoretical sampling distribution. Copy and paste the following code into your R script and run it.
+```{r}
+# (1) Simulate a population of scores
+set.seed(1)
+population <- rnorm(n = 400000, mean = 0, sd = 1) 
+
+# (2) Draw many (in this case 300) samples of size N = 30 from the population and (3) estimate the mean of each sample
+pop_means <- lapply(30, function(x){
+  unlist(lapply(1:300, function(y){
+    mean(sample(population,x,replace=FALSE))
+  }))
+})
+
+# (3) Plot a histogram of the means (a.k.a. the sampling distribution of the mean)
+hist(population, main = 'Sampling Distribution of the Sample Mean', xlab = "Sample Means")
+```
+
+
+## Interpreting a Confidence Interval for $\mu$
+An __incorrect interpretation__ of a frequentist confidence interval says that 95% of the parameter values lie within the confidence interval. This interpretation applies the statement of probability to the parameter. In the frequentist perspective, parameters do not have statements of probability attached to them because they are not random variables with probability distributions. That is, they are conceptualized as fixed at some "true" value in the population. Therefore, the interval either contains the parameter or it does not. 
+
+The __correct interpretation__ of a frequentist confidence interval relies on the concept of long-run frequencies as discussed in the previous illustration of the sampling distribution. For example, one correct interpretation of a 95% confidence interval is that 100 samples drawn from a population yield confidence intervals, of which 95 are expected to contain the "true" population parameter. This interpretation applies the statement of probability to the data.
+
+In summary, statements of probability in the frequentist perspective apply to the data, not the parameter (Gelman et al., 2013). This distinction will become clearer as we introduce concepts from the Bayesian perspective in Modules 2 and 4.
+
+The following code calculates a 95% confidence interval for the mean. Copy and paste the following code into your R script and run it.
+```{r, results = "hide"}
+confint(ulm)
+```
+
+
+## Evaluating Your Understanding
+Please __return to the Qualtrics survey__ to answer a few questions designed to evaluate your understanding of the material presented in this module. If you can confidently answer these questions, you're reading for the new material of Module 3!
+
+
+### References
+Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian data analysis. CRC press.
+
+Golden, C. J., Espe-Pfeifer, P., & Wachsler-Felder, J. (2000). Neuropsychological interpretations of objective psychological tests. NY: Kluwer Academic/Plenum.
+
+Homack, S., & Riccio, C. A. (2004). A meta-analysis of the sensitivity and specificity of the Stroop Color and Word Test with children. Archives of clinical Neuropsychology, 19(6), 725-743.
+
+McClave J. T., & Sincich, T. T. (2017). Statistics. New York: Pearson.
+
+Peck, R., & Devore, J. L. (2011). Statistics: The exploration & analysis of data. Cengage Learning.
+
+Stroop, J. R. (1935). Studies of interference in serial verbal reactions. Journal of Experimental Psychology, 18, 643-662.
+
+Witte, R. S., & Witte, J. S. (2017). Statistics. Hoboken, NJ: Wiley. 
