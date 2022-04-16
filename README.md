@@ -9,4 +9,4 @@ To this end, we developed a set of four hands-on modules for building familiarit
 
 Note: 
 
-The raw R Markdown files are stored above and can be knitted for optimal user experience. 
+The raw R Markdown files are stored above and can be knitted into a Word or PDF document for optimal user experience. 
